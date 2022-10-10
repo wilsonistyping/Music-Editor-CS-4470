@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Main {
-    private static final int INITIAL_STAFF_COUNT = 4;
     private static final ArrayList<MusicView> musicBook = new ArrayList<>();
 
     /*
@@ -26,128 +25,114 @@ public class Main {
     public static boolean selectOn = false;
     private static boolean penOn = false;
 
-    private static JButton deleteStaffButton, deletePageButton, prevPageButton, nextPageButton;
+    private static JButton newStaffButton, deleteStaffButton, deletePageButton, prevPageButton, nextPageButton;
     private static JMenuItem editMenu_deleteStaff, pageMenu_deletePage, pageMenu_nextPage, pageMenu_prevPage;
     public static JLabel statusLabel;
     private static MusicView musicPage;
     private static JFrame frame;
     private static JScrollPane scroller;
-    
-    private static void createAndShowGUI() throws IOException {
+    private static JPanel statusPanel, controlPanel, musicControlsHeaderPane, selectPenButtonsPanel;
+
+    private static void initializeFrame() {
         JFrame.setDefaultLookAndFeelDecorated(true);
         frame = new JFrame("Wilson's CS 4470 Music Editor");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new BorderLayout());
+    }
 
-        JPanel statusPanel = new JPanel();
+    private static void initializeStatusPane() {
+        statusPanel = new JPanel();
         statusLabel = new JLabel("Status label");
         statusPanel.add(statusLabel);
+    }
 
-        /* ----- Content panel (MusicView) controls ----- */
+    private static void initializeContentPane() {
         musicBook.add(new MusicView());
         updateContentPanel();
+    }
 
-        /* --- Control panel controls --- */
-        JPanel controlPanel = new JPanel();
-
+    private static void initializeControlPane() throws IOException {
+        /* --- Control panel initialization --- */
+        controlPanel = new JPanel();
         frame.add(controlPanel, BorderLayout.WEST);
         controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
 
-        /* -------- Music Controls -------- */
-        JPanel musicIntroPanel = new JPanel();
-        musicIntroPanel.add(new JLabel("Music Controls"));
-        musicIntroPanel.setLayout(new BoxLayout(musicIntroPanel, BoxLayout.X_AXIS));
-        controlPanel.add(Box.createRigidArea(new Dimension(0, 8)));
-        controlPanel.add(musicIntroPanel);
+        /* -------- Music Controls Header initialization -------- */
+        musicControlsHeaderPane = new JPanel();
+        musicControlsHeaderPane.add(new JLabel("<html><strong>Music Controls</strong></html>"));
+        controlPanel.add(Box.createRigidArea(new Dimension(0, 8))); // rigidAreas are for padding
+        controlPanel.add(musicControlsHeaderPane);
         controlPanel.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        /* Select & Pen buttons */
-        JPanel selectPenButtonsPanel = new JPanel();
+
+        /* -------- Select & Pen buttons GROUP -------- */
+        selectPenButtonsPanel = new JPanel();
+        selectPenButtonsPanel.setLayout(new BoxLayout(selectPenButtonsPanel, BoxLayout.X_AXIS));
+
         JButton selectButton = new JButton("Select");
         JButton penButton = new JButton("Pen");
-        selectPenButtonsPanel.setLayout(new BoxLayout(selectPenButtonsPanel, BoxLayout.X_AXIS));
+        
         selectPenButtonsPanel.add(selectButton);
         selectPenButtonsPanel.add(penButton);
-        controlPanel.add(selectPenButtonsPanel);
-        // Select & Pen button logic
-        selectButton.addActionListener(e -> {
-            selectOn = !selectOn;
-            statusLabel.setText("selectButton is " + selectOn);
-        });
-        penButton.addActionListener(e -> statusLabel.setText("penButton pressed! Doesn't do anything right now."));
 
-        /* New Staff & Delete Staff buttons */
-        controlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        selectButtonLogic(selectButton);
+        penButtonLogic(penButton);
+
+        controlPanel.add(selectPenButtonsPanel);
+
+
+        /* -------- New Staff & Delete Staff buttons -------- */
+        controlPanel.add(Box.createRigidArea(new Dimension(0, 10)));    // upper margin of 10
         JPanel staffButtonsPanel = new JPanel();
-        JButton newStaffButton = new JButton("New Staff");
-        deleteStaffButton = new JButton("Delete Staff");
         staffButtonsPanel.setLayout(new BoxLayout(staffButtonsPanel, BoxLayout.X_AXIS));
+
+        newStaffButton = new JButton("New Staff");
+        deleteStaffButton = new JButton("Delete Staff");
+
         staffButtonsPanel.add(newStaffButton);
         staffButtonsPanel.add(deleteStaffButton);
-        controlPanel.add(staffButtonsPanel);
-        // New Staff & Delete Staff button logic
-        newStaffButton.addActionListener(e ->  {
-            statusLabel.setText("newStaffButton pressed");
-            addStaff();
-        });
-        deleteStaffButton.addActionListener(e -> {
-            statusLabel.setText("deleteStaffButton pressed");
-            subtractStaff();
-        });
 
-        /* Play & Stop buttons */
+        newStaffButtonLogic(newStaffButton);
+        deleteStaffButtonLogic(deleteStaffButton);
+
+        controlPanel.add(staffButtonsPanel);
         controlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        
+        /* -------- Play & Stop buttons GROUP -------- */
         JPanel playStopButtonsPanel = new JPanel();
+        playStopButtonsPanel.setLayout(new BoxLayout(playStopButtonsPanel, BoxLayout.X_AXIS));
+
         JButton playButton = new JButton("Play");
         JButton stopButton = new JButton("Stop");
-        playStopButtonsPanel.setLayout(new BoxLayout(playStopButtonsPanel, BoxLayout.X_AXIS));
+
         playStopButtonsPanel.add(playButton);
         playStopButtonsPanel.add(stopButton);
-        controlPanel.add(playStopButtonsPanel);
-        // Play & Stop button logic
+
         playButton.addActionListener(e -> statusLabel.setText("playButton pressed"));
         stopButton.addActionListener(e -> statusLabel.setText("stopButton pressed"));
+
+        controlPanel.add(playStopButtonsPanel);
         controlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        /* ---- Note Type and Note Duration grouping ----- */
+        
+        /* -------- Note Type and Note Duration GROUP -------- */
         JPanel noteTypeAndDurationPanel = new JPanel();
         noteTypeAndDurationPanel.setLayout(new GridLayout(0, 2));
 
-        /* Note type radio buttons */
-        JRadioButton noteRadioButton = new JRadioButton("Note");
-        noteRadioButton.setSelected(true);                  // Select Note by default
-        JRadioButton restRadioButton = new JRadioButton("Rest");
-        JRadioButton flatRadioButton = new JRadioButton("Flat");
-        JRadioButton sharpRadioButton = new JRadioButton("Sharp");
-        // Note type radio button logic
-        noteRadioButton.addActionListener(e -> {
-            statusLabel.setText("noteRadioButton pressed");
-            currentTool = 0;
-
-            System.out.println("Current tool is " + currentTool + "/ Current duration is " + currentDuration);
-        });
-        restRadioButton.addActionListener(e -> {
-            statusLabel.setText("restRadioButton pressed");
-            currentTool = 1;
-        });
-        flatRadioButton.addActionListener(e -> {
-            statusLabel.setText("flatRadioButton pressed");
-            currentTool = 2;
-        });
-        sharpRadioButton.addActionListener(e -> {
-            statusLabel.setText("sharpRadioButton pressed");
-            currentTool = 3;
-        });
-        // Group the radio buttons together
-        ButtonGroup noteRadioGroup = new ButtonGroup();
-        noteRadioGroup.add(noteRadioButton);
-        noteRadioGroup.add(restRadioButton);
-        noteRadioGroup.add(flatRadioButton);
-        noteRadioGroup.add(sharpRadioButton);
-        // Add buttons to the panel
+        /* Note (Symbol) Type */
         JPanel noteRadioPanel = new JPanel();
         noteRadioPanel.setLayout(new BoxLayout(noteRadioPanel, BoxLayout.Y_AXIS));
         noteRadioPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JRadioButton noteRadioButton = new JRadioButton("Note");
+        JRadioButton restRadioButton = new JRadioButton("Rest");
+        JRadioButton flatRadioButton = new JRadioButton("Flat");
+        JRadioButton sharpRadioButton = new JRadioButton("Sharp");
+        noteRadioButton.setSelected(true);                  // Select Note by default
+
+        symbolTypeLogic(noteRadioButton, restRadioButton, flatRadioButton, sharpRadioButton);
+
         noteRadioPanel.add(noteRadioButton);
         noteRadioPanel.add(restRadioButton);
         noteRadioPanel.add(flatRadioButton);
@@ -157,56 +142,139 @@ public class Main {
         /* Note duration slider */
         NoteSlider noteSlider = new NoteSlider(statusLabel, currentDuration);
         noteTypeAndDurationPanel.add(noteSlider);
+
         controlPanel.add(noteTypeAndDurationPanel);
-
-
-        /* ------- Page buttons ------- */
-        JPanel pageIntroPanel = new JPanel();
-        pageIntroPanel.add(new JLabel("Page Controls"));
-        pageIntroPanel.setLayout(new BoxLayout(pageIntroPanel, BoxLayout.X_AXIS));
-        controlPanel.add(pageIntroPanel);
+        
+        /* ------- Page buttons GROUP ------- */
+        JPanel pageHeaderPane = new JPanel();
+        pageHeaderPane.add(new JLabel("Page Controls"));
+        pageHeaderPane.setLayout(new BoxLayout(pageHeaderPane, BoxLayout.X_AXIS));
+        controlPanel.add(pageHeaderPane);
         controlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        /* Page creation (add/delete) */
+        /* ------- Page Creation GROUP (add/delete) ------- */
         JPanel pageCreationPanel = new JPanel();
         pageCreationPanel.setLayout(new BoxLayout(pageCreationPanel, BoxLayout.X_AXIS));
+        
         JButton newPageButton = new JButton("New Page");
         deletePageButton = new JButton("Delete Page");
         deletePageButton.setEnabled(false);
+
+        newPageLogic(newPageButton);
+        deletePageLogic(deletePageButton);
+
         pageCreationPanel.add(newPageButton);
         pageCreationPanel.add(deletePageButton);
+
         controlPanel.add(pageCreationPanel);
-        // Page creation button logic
+        
+
+        /* ------- Page navigation GROUP (prev/next) ------- */
+        JPanel pageNavigationPanel = new JPanel();
+        pageNavigationPanel.setLayout(new BoxLayout(pageNavigationPanel, BoxLayout.X_AXIS));
+        
+        prevPageButton = new JButton("Previous");
+        nextPageButton = new JButton("Next");
+        
+        prevPageButton.setEnabled(false);
+        nextPageButton.setEnabled(false);
+       
+        pageNavigationPanel.add(prevPageButton);
+        pageNavigationPanel.add(nextPageButton);
+
+        prevPageLogic(prevPageButton);
+        nextPageLogic(nextPageButton);
+
+        controlPanel.add(pageNavigationPanel);
+    }
+
+    private static void selectButtonLogic(JButton selectButton) {
+        // Select button logic, pen button logic
+        selectButton.addActionListener(e -> {
+            selectOn = !selectOn;
+            statusLabel.setText("selectButton is " + selectOn);
+        });
+    }
+
+    private static void penButtonLogic(JButton penButton) {
+        penButton.addActionListener(e -> statusLabel.setText("penButton pressed! Doesn't do anything right now."));
+    }
+
+    private static void newStaffButtonLogic(JButton newStaffButton) {
+        newStaffButton.addActionListener(e ->  {
+            statusLabel.setText("newStaffButton pressed");
+            addStaff();
+        });
+    }
+
+    private static void deleteStaffButtonLogic(JButton deleteStaffButton) {
+        deleteStaffButton.addActionListener(e -> {
+            statusLabel.setText("deleteStaffButton pressed");
+            subtractStaff();
+        });
+    }
+
+    private static void symbolTypeLogic(JRadioButton note, JRadioButton rest, JRadioButton sharp, JRadioButton flat) {
+        // Symbol radio button logic
+        note.addActionListener(e -> {
+            statusLabel.setText("noteRadioButton pressed");
+            currentTool = 0;
+        });
+        rest.addActionListener(e -> {
+            statusLabel.setText("restRadioButton pressed");
+            currentTool = 1;
+        });
+        flat.addActionListener(e -> {
+            statusLabel.setText("flatRadioButton pressed");
+            currentTool = 2;
+        });
+        sharp.addActionListener(e -> {
+            statusLabel.setText("sharpRadioButton pressed");
+            currentTool = 3;
+        });
+
+        // Group the radio buttons together
+        ButtonGroup noteRadioGroup = new ButtonGroup();
+        noteRadioGroup.add(note);
+        noteRadioGroup.add(rest);
+        noteRadioGroup.add(flat);
+        noteRadioGroup.add(sharp);
+    }
+
+    private static void newPageLogic(JButton newPageButton) {
         newPageButton.addActionListener(e -> {
             statusLabel.setText("newPageButton pressed");
             addPage();
         });
+    }
+
+    private static void deletePageLogic(JButton deletePageButton) {
         deletePageButton.addActionListener(e -> {
             statusLabel.setText("deletePageButton pressed");
             deletePage();
         });
+    }
 
-        /* Page navigation (prev/next) */
-        JPanel pageNavigationPanel = new JPanel();
-        pageNavigationPanel.setLayout(new BoxLayout(pageNavigationPanel, BoxLayout.X_AXIS));
-        prevPageButton = new JButton("Previous");
-        nextPageButton = new JButton("Next");
-        prevPageButton.setEnabled(false);
-        nextPageButton.setEnabled(false);
-        pageNavigationPanel.add(prevPageButton);
-        pageNavigationPanel.add(nextPageButton);
-        controlPanel.add(pageNavigationPanel);
-        // Page navigation button logic
+    private static void prevPageLogic(JButton prevPageButton) {
         prevPageButton.addActionListener(e -> {
             statusLabel.setText("prevPageButton pressed");
             prevPage();
         });
-        nextPageButton.addActionListener(e -> {
-            statusLabel.setText("nextPageButton pressed");
-            nextPage();
-        });
+    }
 
-        // Finishing touches
+    private static void nextPageLogic(JButton nextPageButton) {
+        
+    }
+    private static void initializeGUI() throws IOException {
+        initializeFrame();
+        initializeStatusPane();
+        initializeContentPane();
+        initializeControlPane();
+    }
+
+    private static void createAndShowGUI() throws IOException {
+        initializeGUI();
+  
         insertMenu(frame, statusLabel);
         frame.add(statusPanel, BorderLayout.SOUTH);
         frame.setMinimumSize(new Dimension(600, 600));
