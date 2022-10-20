@@ -1,3 +1,5 @@
+import java.awt.*;
+
 public class Note {
     private int associatedStaff;
     private int x;
@@ -9,7 +11,8 @@ public class Note {
     private int duration;
     private int type;
     private String pitch;
-    private String accidental;
+    private Accidental accidental;
+    private boolean isSelected = false;
 
     public Note(int x, int y, int duration, int type, int associatedStaff) {
         this.x = x;
@@ -68,7 +71,6 @@ public class Note {
         *
         *
          */
-//        int relativeY = getYPositionPoint() % 120 + 4;
         int relativeY = getYPositionPoint() % 120 + 5;
 
         // Notes with stems are janky with Y positioning
@@ -80,8 +82,7 @@ public class Note {
         String pitch = "";
 
         // Figure out which octave we're in
-
-        System.out.println("Relative y before octave adjustment is " + relativeY);
+//        System.out.println("Relative y before octave adjustment is " + relativeY);
         if (relativeY > 71) {
             pitch = "4";
         }
@@ -100,7 +101,7 @@ public class Note {
             relativeY += 50;
         }
 
-        System.out.println("Relative y is " + relativeY);
+//        System.out.println("Relative y is " + relativeY);
 
         if (relativeY < 120 + margin && relativeY > 120 - margin) {
             return "A" + pitch;
@@ -126,6 +127,13 @@ public class Note {
     return null;
     }
 
+    public void drawOutline(Graphics g) {
+        g.setColor(Color.blue);
+        g.drawRect(this.getXPositionPoint(), this.getYPositionPoint(), this.getWidth(), this.getHeight());
+        g.setColor(Color.black);
+    }
+
+
 
     // Getters
     public int getX() {
@@ -136,8 +144,8 @@ public class Note {
     }
     public int getWidth() { return this.width; }
     public int getHeight() { return this.height; }
-    public int getXEnd() { return this.x + this.width; }
-    public int getYEnd() { return this.y + this.height; }
+    public int getXEnd() { return this.xPositionPoint + this.width; }
+    public int getYEnd() { return this.yPositionPoint + this.height; }
     public int getXPositionPoint() {
         return this.xPositionPoint;
     }
@@ -146,7 +154,7 @@ public class Note {
     }
 
     public String getPitch() { return this.pitch; }
-    public String getAccidental() { return this.accidental; }
+    public Accidental getAccidental() { return this.accidental; }
     public int getAssociatedStaff() { return this.associatedStaff; }
     public int getDuration() {
         return duration;
@@ -154,46 +162,92 @@ public class Note {
     public int getType() {
         return type;
     }
+    public boolean hasAccidental() {
+        return accidental != null;
+    }
+    public boolean isSelected() {
+        return this.isSelected;
+    }
+
 
     // Setters
     public void setX(int x) {
         this.x = x;
         switch (duration) {
-            case 0:         // whole note
+            case MusicConstants.WHOLE_NOTE:         // whole note
                 this.xPositionPoint = x - 10;
                 break;
-            case 1:         // half note
+            case MusicConstants.HALF_NOTE:         // half note
                 this.xPositionPoint = x - 15;
                 break;
-            case 2:         // quarter note
+            case MusicConstants.QUARTER_NOTE:         // quarter note
                 this.xPositionPoint = x - 7;
                 break;
-            case 3:         // eighth note
+            case MusicConstants.EIGHTH_NOTE:         // eighth note
                 this.xPositionPoint = x - 15;
                 break;
-            case 4:         // sixteenth note
+            case MusicConstants.SIXTEENTH_NOTE:         // sixteenth note
                 this.xPositionPoint = x - 6;
                 break;
+        }
+        // Update accidental's coordinates, if one exists
+        if (this.hasAccidental()) {
+            switch (duration) {
+                case MusicConstants.WHOLE_NOTE:         // whole note
+                    this.accidental.setX(this.getXPositionPoint() - 10);
+                    break;
+                case MusicConstants.HALF_NOTE:         // half note
+                    this.accidental.setX(this.getXPositionPoint());
+                    break;
+                case MusicConstants.QUARTER_NOTE:         // quarter note
+                    this.accidental.setX(this.getXPositionPoint() - 10);
+                    break;
+                case MusicConstants.EIGHTH_NOTE:         // eighth note
+                    this.accidental.setX(this.getXPositionPoint());
+                    break;
+                case MusicConstants.SIXTEENTH_NOTE:         // sixteenth note
+                    this.accidental.setX(this.getXPositionPoint() - 10);
+                    break;
+            }
         }
     }
     public void setY(int y) {
         this.y = y;
         switch (duration) {
-            case 0:         // whole note
+            case MusicConstants.WHOLE_NOTE:         // whole note
                 this.yPositionPoint = y - 6;
                 break;
-            case 1:         // half note
+            case MusicConstants.HALF_NOTE:         // half note
                 this.yPositionPoint = y - 34;
                 break;
-            case 2:         // quarter note
+            case MusicConstants.QUARTER_NOTE:         // quarter note
                 this.yPositionPoint = y - 35;
                 break;
-            case 3:         // eighth note
+            case MusicConstants.EIGHTH_NOTE:         // eighth note
                 this.yPositionPoint = y - 36;
                 break;
-            case 4:         // sixteenth note
+            case MusicConstants.SIXTEENTH_NOTE:         // sixteenth note
                 this.yPositionPoint = y - 35;
                 break;
+        }
+        if (this.hasAccidental()) {
+            switch (duration) {
+                case MusicConstants.WHOLE_NOTE:         // whole note
+                    this.accidental.setY(this.getYPositionPoint() - 8);
+                    break;
+                case MusicConstants.HALF_NOTE:         // half note
+                    this.accidental.setY(this.getYPositionPoint() + 20);
+                    break;
+                case MusicConstants.QUARTER_NOTE:         // quarter note
+                    this.accidental.setY(this.getYPositionPoint() + 20);
+                    break;
+                case MusicConstants.EIGHTH_NOTE:         // eighth note
+                    this.accidental.setY(this.getYPositionPoint() + 20);
+                    break;
+                case MusicConstants.SIXTEENTH_NOTE:         // sixteenth note
+                    this.accidental.setY(this.getYPositionPoint() + 20);
+                    break;
+            }
         }
     }
     public void setPos(int x, int y) {
@@ -201,9 +255,13 @@ public class Note {
         this.y = y;
     }
     public void setPitch(String pitch) { this.pitch = pitch; }
-    public void setAccidental(String accidental) { this.accidental = accidental; }
+    public void setAccidental(Accidental accidental) { this.accidental = accidental; }
     public void setAssociatedStaff(int associatedStaff) {
         this.associatedStaff = associatedStaff;
+    }
+
+    public void setSelected(boolean bool) {
+        this.isSelected = bool;
     }
 
 

@@ -10,6 +10,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     private static int lastMouseX, lastMouseY;
 
     public static Note selectedSymbol = null;
+    public static Accidental selectedAccidental = null;
     public static int lastAssociatedStaffIndex;
 
     private ArrayList<Staff> staffArrayList = new ArrayList<>();
@@ -61,8 +62,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         repaint();
     }
 
-
-
+    // Event listeners
     @Override
     public void mouseClicked(MouseEvent e) {
     }
@@ -75,9 +75,10 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         int associatedStaffIndex = mouseY / 120;
         Staff associatedStaff = staffArrayList.get(associatedStaffIndex);
 
-        if (Main.selectOn) {        // Drag mode
+        // Drag mode
+        if (Main.selectOn) {
 
-            // Case 1 - note is selected, user clicks outside border region
+            // Case 1 - note is selected, user clicks outside border
             if (selectedSymbol != null) {
                 int x = selectedSymbol.getXPositionPoint();
                 int y = selectedSymbol.getYPositionPoint();
@@ -85,39 +86,50 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
                 boolean inYBounds = (mouseY >= y && mouseY <= y + selectedSymbol.getHeight());
 
                 if (!(inXBounds && inYBounds)) {
-                    System.out.println("Out of bounds - removing selection");
+                    selectedSymbol.setSelected(false);
                     staffArrayList.get(lastAssociatedStaffIndex).addNote(selectedSymbol);
                     staffArrayList.get(lastAssociatedStaffIndex).setSelectedNoteExists(false);
                     selectedSymbol = null;
                     associatedStaff.setSelectedNote(null);
-                    associatedStaff.setSelectedNoteIndex(-1);
                     associatedStaff.setSelectedNoteExists(false);
                     lastAssociatedStaffIndex = -1;
                 }
             }
 
-            // Case 2 - note is selected, user clicks inside border region
+            // Case 2 - note is selected, user clicks inside border
             if (selectedSymbol != null) {
-
-            } else {
-                // Case 3 - no note selected, user clicks inside region with note
+                // nothing happens lol
+            }
+            // Case 3 - no note selected, user clicks inside note region
+            else {
                 for (int i = 0; i < associatedStaff.getNotes().size(); i++) {
                     Note note = associatedStaff.getNotes().get(i);
                     int x = note.getXPositionPoint();
                     int y = note.getYPositionPoint();
-//                System.out.println("Mouse (x,y) :" + mouseX + "," + mouseY);
-//                System.out.println("Note bounds: (" + x_upperLeft + "," + y_upperLeft + ") | (" + x_lowerRight + "," + y_lowerRight + ")");
                     boolean inXBounds = (mouseX >= x && mouseX <= x + note.getWidth());
                     boolean inYBounds = (mouseY >= y && mouseY <= y + note.getHeight());
-//                System.out.println("Cursor position is " + mouseX + "," + mouseY);
-//                System.out.println("Note bounds are " + x + "," + y + " to "
-//                        + (x + note.getWidth()) + "," + (y + note.getHeight()));
+
+//                    // Mouse is within the accidental bounds
+//                    if (note.hasAccidental()) {
+//                        Accidental acc = note.getAccidental();
+//                        boolean inXAccBounds = (mouseX >= acc.getX() && mouseX <= acc.getX() + acc.getWidth());
+//                        boolean inYAccBounds = (mouseY >= acc.getY() && mouseY <= acc.getY() + acc.getHeight());
+//
+//                        if (inXAccBounds && inYAccBounds) {
+//                            selectedAccidental = acc;
+//                            associatedStaff.setSelectedAccidental(acc, note);
+//                            associatedStaff.setSelectedAccidentalExists(true);
+//                            lastAssociatedStaffIndex = associatedStaffIndex;
+//                        }
+//                    }
+
+                    // Mouse is within the note bounds
                     if (inXBounds && inYBounds) {
+                        note.setSelected(true);
                         selectedSymbol = note;
 
                         // Turn the selected symbol into the SelectedNote type in the Staff
                         associatedStaff.setSelectedNote(note);
-                        associatedStaff.setSelectedNoteIndex(i);
                         associatedStaff.setSelectedNoteExists(true);
                         lastAssociatedStaffIndex = associatedStaffIndex;
 
@@ -133,10 +145,20 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
             }
 
 
-        } else {                    // Insert mode
-            Note note = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
-            associatedStaff.setDraggedNote(note);
-            System.out.println("Added new note at coords: (" + note.getXPositionPoint() + "," + note.getYPositionPoint() + ")");
+        }
+        // Insert mode
+        else {
+            // Flag for a dragged note if the symbol is note (0 or rest (1)
+            if (isNoteOrRest()) {
+                if (isNote()) { mouseX = xSnapAdjust(mouseX, associatedStaff); }
+                Note note = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
+                associatedStaff.setDraggedNote(note);
+            }
+            // Flag for a dragged accidental if the symbol is flat (2) or sharp (3)
+            else if (isAccidental()) {
+                Accidental accidental = new Accidental(mouseX, mouseY, Main.currentTool);
+                associatedStaff.setDraggedAccidental(accidental);
+            }
         }
 
         repaint();
@@ -144,55 +166,91 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseDragged(MouseEvent e) {
-//        System.out.println("Mouse is being dragged");
         int mouseX = e.getX();
         int mouseY = e.getY();
         int associatedStaffIndex = mouseY / 120;
         Staff associatedStaff = staffArrayList.get(associatedStaffIndex);
 
+        // Drag mode (Select on)
         if (Main.selectOn) {
+            // If there is a symbol selected, then change its position according to the mouse position
             if (selectedSymbol != null) {
                 Note note = new Note(mouseX, mouseY, selectedSymbol.getDuration(), selectedSymbol.getType(), associatedStaffIndex);
+                note.setAccidental(selectedSymbol.getAccidental());
                 selectedSymbol.setX(mouseX);
                 selectedSymbol.setY(mouseY);
                 lastAssociatedStaffIndex = associatedStaffIndex;
-
-                Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
                 associatedStaff.setSelectedNote(note);
             }
-        } else {
-            Note note = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
-
-            Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
-            associatedStaff.setDraggedNote(note);
+        }
+        // Insert mode
+        else {
+            if (isNoteOrRest()) {
+                if (isNote()) {
+                    mouseX = xSnapAdjust(mouseX, associatedStaff);
+                }
+                Note movedNote = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
+                associatedStaff.setDraggedNote(movedNote);
+            }
+            else if (isAccidental()) {
+                Accidental movedAccidental = new Accidental(mouseX, mouseY, Main.currentTool);
+                associatedStaff.setDraggedAccidental(movedAccidental);
+            }
         }
         repaint();
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-//        System.out.println("Mouse has been released");
         int mouseX = e.getX();
         int mouseY = e.getY();
 
         int associatedStaffIndex = mouseY / 120;
         Staff associatedStaff = staffArrayList.get(associatedStaffIndex);
 
+        // Drag mode (Select on)
         if (Main.selectOn) {
             if (selectedSymbol != null) {
                 Note note = new Note(mouseX, mouseY, selectedSymbol.getDuration(), selectedSymbol.getType(), associatedStaffIndex);
                 Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
             }
-        } else {
-            Note note = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
-            associatedStaff.addNote(note);
-            associatedStaff.setDraggedNoteExists(false);
+        }
+        // Insert mode (Select off)
+        else {
+            // Note or rest
+            if (isNoteOrRest()) {
+                if (isNote()) {
+                    mouseX = xSnapAdjust(mouseX, associatedStaff);
+                }
 
-            Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
+                Note note = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
+                associatedStaff.addNote(note);
+                associatedStaff.setDraggedNoteExists(false);
+
+                Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
+            }
+            // Accidental (flat or sharp)
+           else if (isAccidental()) {
+               Accidental accidental = new Accidental(mouseX, mouseY, Main.currentTool);
+               associatedStaff.addAccidentalIfValid(accidental);
+               associatedStaff.setDraggedAccidentalExists(false);
+            }
         }
         lastMouseX = mouseX;
         lastMouseY = mouseY;
         repaint();
+    }
+
+    private int xSnapAdjust(int mouseX, Staff associatedStaff) {
+        for (int i = 0; i < associatedStaff.getNotes().size(); i++) {
+            Note curr = associatedStaff.getNotes().get(i);
+            if (curr.getType() == MusicConstants.SYMBOL_NOTE) {
+                if (mouseX >= curr.getXPositionPoint() && mouseX <= curr.getXEnd()) {
+                    return curr.getX();
+                }
+            }
+        }
+        return mouseX;
     }
 
     @Override
@@ -217,15 +275,20 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-            System.out.println("KeyEvent.VK_DELETE in keyPressed");
+//            System.out.println("KeyEvent.VK_DELETE in keyPressed");
             System.out.println("Selected symbol is " + selectedSymbol);
+            System.out.println("Selected accidental is " + selectedAccidental);
             System.out.println("Last associated staff is " + lastAssociatedStaffIndex);
             if (selectedSymbol != null) {
-                {
-                    selectedSymbol = null;
-                    staffArrayList.get(lastAssociatedStaffIndex).setSelectedNoteExists(false);
-                    repaint();
-                }
+                selectedSymbol = null;
+                staffArrayList.get(lastAssociatedStaffIndex).setSelectedNoteExists(false);
+                repaint();
+            }
+            if (selectedAccidental != null) {
+                selectedAccidental = null;
+                staffArrayList.get(lastAssociatedStaffIndex).setSelectedAccidentalExists(false);
+                staffArrayList.get(lastAssociatedStaffIndex).setSelectedAccidentalExists(false);
+                repaint();
             }
         }
     }
@@ -234,6 +297,18 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     public void keyReleased(KeyEvent e) {
     }
 
+    // Helpers
+    private boolean isAccidental() {
+        return Main.currentTool == MusicConstants.SYMBOL_FLAT || Main.currentTool == MusicConstants.SYMBOL_SHARP;
+    }
+
+    private boolean isNoteOrRest() {
+        return Main.currentTool == MusicConstants.SYMBOL_NOTE || Main.currentTool == MusicConstants.SYMBOL_REST;
+    }
+
+    private boolean isNote() {
+        return Main.currentTool == MusicConstants.SYMBOL_NOTE;
+    }
 
     // Getters and setters
     public int getStaves() {

@@ -12,9 +12,15 @@ public class Staff extends JComponent {
 
     private static Note draggedNote;
     private static boolean draggedNoteExists = false;
+
+    private static Accidental draggedAccidental;
+    private static boolean draggedAccidentalExists = false;
+
     private static Note selectedNote;
-    private static int selectedNoteIndex;
     private static boolean selectedNoteExists = false;
+
+    private static Accidental selectedAccidental;
+    private static boolean selectedAccidentalExists = false;
 
     private static final int WIDTH = 1000;
 
@@ -80,25 +86,62 @@ public class Staff extends JComponent {
         for (int i = 0; i < notesList.size(); i++) {
             Note note = notesList.get(i);
 
-            // When selection is on...
-//            System.out.println("SelectedNoteExists = " + selectedNoteExists);
-//            System.out.println("SelectedNoteIndex = " + selectedNoteIndex);
-//            System.out.println("-------");
-            Image noteType;
-            noteType = getNoteType(note);
-            g.drawImage(noteType, note.getXPositionPoint(), note.getYPositionPoint(), null);
+            Image noteImage;
+            noteImage = getNoteType(note);
+            g.drawImage(noteImage, note.getXPositionPoint(), note.getYPositionPoint(), null);
+            if (note.hasAccidental()) { drawAccidental(note, g); }
+            if (note.isSelected()) {
+                System.out.println("Note is selected");
+                note.drawOutline(g);
+
+                if (note.hasAccidental()) { note.getAccidental().drawOutline(g); }
+                g.setColor(Color.black);
+            }
+
+
         }
 
         // Dragged note
         if (draggedNoteExists) {
             Image draggedNoteType = getNoteType(draggedNote);
             g.drawImage(draggedNoteType, draggedNote.getXPositionPoint(), draggedNote.getYPositionPoint(), null);
+
+            // If there's an accidental associated with the note, draw that too
+            if (draggedNote.hasAccidental()) {
+                System.out.println("Dragged note has accidental!");
+                Accidental accidental = draggedNote.getAccidental();
+                Image selectedAccidentalImage = getAccidentalType(accidental);
+                g.drawImage(selectedAccidentalImage, accidental.getX(), accidental.getY(), null);
+                g.drawRect(accidental.getX(), accidental.getY(), accidental.getWidth(), accidental.getHeight());
+            }
         }
+        // Dragged accidental
+        if (draggedAccidentalExists) {
+            Image draggedAccidentalType = getAccidentalType(draggedAccidental);
+            g.drawImage(draggedAccidentalType, draggedAccidental.getX(), draggedAccidental.getY(), null);
+            for (int i = 0; i < notesList.size(); i++) {
+                Note currNote = notesList.get(i);
+                g.setColor(Color.blue);
+                g.drawRect(currNote.getXPositionPoint(), currNote.getYPositionPoint(), currNote.getWidth(), currNote.getHeight());
+            }
+        }
+        // Selected note
         if (selectedNoteExists) {
-            Image selectedNoteType = getNoteType(selectedNote);
-            g.drawImage(selectedNoteType, selectedNote.getXPositionPoint(), selectedNote.getYPositionPoint(), null);
+            Image selectedNoteImage = getNoteType(selectedNote);
+            g.drawImage(selectedNoteImage, selectedNote.getXPositionPoint(), selectedNote.getYPositionPoint(), null);
             g.setColor(Color.blue);
             g.drawRect(selectedNote.getXPositionPoint(), selectedNote.getYPositionPoint(), selectedNote.getWidth(), selectedNote.getHeight());
+
+            // If there's an accidental associated with the note, draw that too
+            if (selectedNote.hasAccidental()) {
+                Accidental accidental = selectedNote.getAccidental();
+                Image selectedAccidentalImage = getAccidentalType(accidental);
+                g.drawImage(selectedAccidentalImage, accidental.getX(), accidental.getY(), null);
+                g.drawRect(accidental.getX(), accidental.getY(), accidental.getWidth(), accidental.getHeight());
+            }
+        }
+        if (selectedAccidentalExists) {
+            g.drawRect(selectedAccidental.getX(), selectedAccidental.getY(), selectedAccidental.getWidth(), selectedAccidental.getHeight());
         }
 
         g.setColor(Color.black);
@@ -120,59 +163,74 @@ public class Staff extends JComponent {
         g.drawLine(x + (2 * WIDTH/3), y, x + (2 * WIDTH/3), 60 + y);
     }
 
-    private Image getNoteType(Note note) {
-        /* Note type:
-         * 0 - note
-         * 1 - rest
-         * 2 - flat
-         * 3 - sharp
-         */
+    private void drawAccidental(Note note, Graphics g) {
+        Image accidentalImage;
+        accidentalImage = getAccidentalType(note.getAccidental());
+        if (note.getDuration() == MusicConstants.WHOLE_NOTE) {
+            g.drawImage(accidentalImage, note.getXPositionPoint() - 10, note.getYPositionPoint() - 8, null);
+        }
+        else if (note.getDuration() == MusicConstants.HALF_NOTE) {
+            g.drawImage(accidentalImage, note.getXPositionPoint(), note.getYPositionPoint() + 20, null);
+        }
+        else if (note.getDuration() == MusicConstants.QUARTER_NOTE) {
+            g.drawImage(accidentalImage, note.getXPositionPoint() - 10, note.getYPositionPoint() + 20, null);
+        }
+        else if (note.getDuration() == MusicConstants.EIGHTH_NOTE) {
+            g.drawImage(accidentalImage, note.getXPositionPoint(), note.getYPositionPoint() + 20, null);
+        }
+        else if (note.getDuration() == MusicConstants.SIXTEENTH_NOTE) {
+            g.drawImage(accidentalImage, note.getXPositionPoint() - 10, note.getYPositionPoint() + 20, null);
+        }
+    }
 
-        /* Note duration:
-         * 0 - whole
-         * 1 - half
-         * 2 - quarter
-         * 3 - eighth
-         * 4 - sixteenth
-         * */
+    private Image getNoteType(Note note) {
         int type = note.getType();
         int duration = note.getDuration();
 
-        if (type == 0) {
+        if (type == MusicConstants.SYMBOL_NOTE) {
             switch (duration) {
-                case 0:
+                case MusicConstants.WHOLE_NOTE:
                     return wholeNoteImage;
-                case 1:
+                case MusicConstants.HALF_NOTE:
                     return halfNoteImage;
-                case 2:
+                case MusicConstants.QUARTER_NOTE:
                     return quarterNoteImage;
-                case 3:
+                case MusicConstants.EIGHTH_NOTE:
                     return eightNoteImage;
-                case 4:
+                case MusicConstants.SIXTEENTH_NOTE:
                     return sixteenthNoteImage;
             }
         }
-        else if (type == 1) {
+        else if (type == MusicConstants.SYMBOL_REST) {
             switch (duration) {
-                case 0:
+                case MusicConstants.WHOLE_NOTE:
                     return wholeRestImage;
-                case 1:
+                case MusicConstants.HALF_NOTE:
                     return halfRestImage;
-                case 2:
+                case MusicConstants.QUARTER_NOTE:
                     return quarterRestImage;
-                case 3:
+                case MusicConstants.EIGHTH_NOTE:
                     return eightRestImage;
-                case 4:
+                case MusicConstants.SIXTEENTH_NOTE:
                     return sixteenthRestImage;
             }
         }
-        else if (type == 2) {
+        else {
+            System.out.println("Something bad happened in getNoteType() :(");
+        }
+        return null;
+    }
+
+    private Image getAccidentalType(Accidental accidental) {
+        int type = accidental.getType();
+        if (type == MusicConstants.SYMBOL_FLAT) {
             return flatImage;
         }
-        else if (type == 3) {
+        else if (type == MusicConstants.SYMBOL_SHARP) {
             return sharpImage;
-        } else {
-            System.out.println("Didn't work lol");
+        }
+        else {
+            System.out.println("Something bad happened in getAccidentalType() :(");
         }
         return null;
     }
@@ -314,6 +372,8 @@ public class Staff extends JComponent {
     public void removeNote(int index) {
         notesList.remove(index);
     }
+
+    // Dragged stuff
     public void setDraggedNote(Note note) {
         draggedNote = note;
         draggedNoteExists = true;
@@ -321,14 +381,45 @@ public class Staff extends JComponent {
     public void setDraggedNoteExists(boolean bool) {
         draggedNoteExists = bool;
     }
+
+    public void setDraggedAccidental(Accidental accidental) {
+        draggedAccidental = accidental;
+        draggedAccidentalExists = true;
+    }
+    public void addAccidentalIfValid(Accidental accidental) {
+        int x = accidental.getX();
+        int y = accidental.getY();
+
+        for (int i = 0; i < notesList.size(); i++) {
+            Note currNote = notesList.get(i);
+            // Check if x and y are in bounds
+            boolean inXBounds = (x >= currNote.getXPositionPoint() && x <= currNote.getXEnd());
+            boolean inYBounds = (y >= currNote.getYPositionPoint() && y <= currNote.getYEnd());
+            if (inXBounds && inYBounds) {
+                currNote.setAccidental(accidental);
+                break;
+            }
+        }
+    }
+    public void setDraggedAccidentalExists(boolean bool) {
+        draggedAccidentalExists = bool;
+    }
+
+    // Selected stuff
     public void setSelectedNote(Note note) {
         selectedNote = note;
         selectedNoteExists = true;
     }
-    public void setSelectedNoteIndex(int i) {
-        selectedNoteIndex = i;
-    }
     public void setSelectedNoteExists(boolean bool) {
         selectedNoteExists = bool;
+    }
+
+    public void setSelectedAccidental(Accidental accidental, Note note) {
+        selectedAccidental = accidental;
+        Note associatedNote = note;
+        selectedAccidentalExists = true;
+    }
+    public void setSelectedAccidentalExists(boolean bool) {
+        selectedAccidentalExists = bool;
     }
 }
