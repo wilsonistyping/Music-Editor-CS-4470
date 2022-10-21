@@ -5,21 +5,7 @@ import java.util.ArrayList;
 
 public class Main {
     private static final ArrayList<MusicView> musicBook = new ArrayList<>();
-
-    /*
-    * 0 - note
-    * 1 - rest
-    * 2 - flat
-    * 3 - sharp
-     */
     public static int currentTool;
-    /*
-    * 0 - whole
-    * 1 - half
-    * 2 - quarter
-    * 3 - eighth
-    * 4 - sixteenth
-    * */
     public static int currentDuration;
     private static int currentPage = 0;
     public static boolean selectOn = false;
@@ -33,25 +19,44 @@ public class Main {
     private static JScrollPane scroller;
     private static JPanel statusPanel, controlPanel, musicControlsHeaderPane, selectPenButtonsPanel;
 
+    /**
+     * createAndShowGUI() is the primary method that controls the load of everything else.
+     * @throws IOException
+     */
+    private static void createAndShowGUI() throws IOException {
+        initializeGUI();
+
+        insertMenu(frame, statusLabel);
+        frame.add(statusPanel, BorderLayout.SOUTH);
+        frame.setMinimumSize(new Dimension(600, 600));
+        frame.pack();
+        frame.setVisible(true);
+    }
+    private static void initializeGUI() throws IOException {
+        initializeFrame();
+        initializeStatusPane();
+        initializeContentPane();
+        initializeControlPane();
+    }
+
+    // Logic for all of the panels in the box layout
     private static void initializeFrame() {
         JFrame.setDefaultLookAndFeelDecorated(true);
         frame = new JFrame("Wilson's CS 4470 Music Editor");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new BorderLayout());
     }
-
     private static void initializeStatusPane() {
         statusPanel = new JPanel();
         statusLabel = new JLabel("Status label");
         statusPanel.add(statusLabel);
     }
-
     private static void initializeContentPane() {
         musicBook.add(new MusicView());
         updateContentPanel();
     }
-
     private static void initializeControlPane() throws IOException {
+
         /* --- Control panel initialization --- */
         controlPanel = new JPanel();
         frame.add(controlPanel, BorderLayout.WEST);
@@ -188,6 +193,9 @@ public class Main {
         controlPanel.add(pageNavigationPanel);
     }
 
+    // All of the logic for the buttons in the control pane below
+
+    // select/pen row
     private static void selectButtonLogic(JButton selectButton) {
         // Select button logic, pen button logic
         selectButton.addActionListener(e -> {
@@ -195,18 +203,16 @@ public class Main {
             statusLabel.setText("selectButton is " + selectOn);
         });
     }
-
     private static void penButtonLogic(JButton penButton) {
         penButton.addActionListener(e -> statusLabel.setText("penButton pressed! Doesn't do anything right now."));
     }
-
+    // new/delete staff row
     private static void newStaffButtonLogic(JButton newStaffButton) {
         newStaffButton.addActionListener(e ->  {
             statusLabel.setText("newStaffButton pressed");
             addStaff();
         });
     }
-
     private static void deleteStaffButtonLogic(JButton deleteStaffButton) {
         deleteStaffButton.addActionListener(e -> {
             statusLabel.setText("deleteStaffButton pressed");
@@ -214,7 +220,8 @@ public class Main {
         });
     }
 
-    private static void symbolTypeLogic(JRadioButton note, JRadioButton rest, JRadioButton sharp, JRadioButton flat) {
+    // Radio buttons for symbol types
+    private static void symbolTypeLogic(JRadioButton note, JRadioButton rest, JRadioButton flat, JRadioButton sharp) {
         // Symbol radio button logic
         note.addActionListener(e -> {
             statusLabel.setText("noteRadioButton pressed");
@@ -224,6 +231,8 @@ public class Main {
             statusLabel.setText("restRadioButton pressed");
             currentTool = 1;
         });
+        
+        // Accidental logic
         flat.addActionListener(e -> {
             statusLabel.setText("flatRadioButton pressed");
             currentTool = 2;
@@ -241,13 +250,13 @@ public class Main {
         noteRadioGroup.add(sharp);
     }
 
+    // new/delete page row
     private static void newPageLogic(JButton newPageButton) {
         newPageButton.addActionListener(e -> {
             statusLabel.setText("newPageButton pressed");
             addPage();
         });
     }
-
     private static void deletePageLogic(JButton deletePageButton) {
         deletePageButton.addActionListener(e -> {
             statusLabel.setText("deletePageButton pressed");
@@ -255,34 +264,21 @@ public class Main {
         });
     }
 
+    // previous/next page (navigation) row
     private static void prevPageLogic(JButton prevPageButton) {
         prevPageButton.addActionListener(e -> {
             statusLabel.setText("prevPageButton pressed");
             prevPage();
         });
     }
-
     private static void nextPageLogic(JButton nextPageButton) {
-        
-    }
-    private static void initializeGUI() throws IOException {
-        initializeFrame();
-        initializeStatusPane();
-        initializeContentPane();
-        initializeControlPane();
+        nextPageButton.addActionListener(e -> {
+            statusLabel.setText("nextPageButton pressed");
+            nextPage();
+        });
     }
 
-    private static void createAndShowGUI() throws IOException {
-        initializeGUI();
-  
-        insertMenu(frame, statusLabel);
-        frame.add(statusPanel, BorderLayout.SOUTH);
-        frame.setMinimumSize(new Dimension(600, 600));
-        frame.pack();
-        frame.setVisible(true);
-    }
-
-    /* Below are a lot of helper methods yeah */
+    /** Below are a lot of helper methods yeah */
     private static void insertMenu(JFrame frame, JLabel statusLabel) {
         JMenuBar menuBar = new JMenuBar();
 
@@ -349,7 +345,7 @@ public class Main {
         frame.setJMenuBar(menuBar);
     }
 
-    /* Helper methods related to staff functionality */
+    // Staff functionality
     private static int getStaves() {
         return musicPage.getStaves();
 
@@ -360,7 +356,6 @@ public class Main {
         musicPage.newStaff();
         updateStaffButtons();
     }
-
     private static void subtractStaff() {
         int numStaves = getStaves();
         musicPage.deleteStaff();
@@ -381,7 +376,7 @@ public class Main {
         }
     }
 
-    /* Helper methods related to page functionality */
+    // Page functionality
     private static void addPage() {
         currentPage++;
         System.out.println("Current page is " + currentPage);
@@ -393,7 +388,6 @@ public class Main {
         updateStaffButtons();
         updatePageButtons();
     }
-
     private static void deletePage() {
         if (musicBook.size() - 1 != 0) {
             musicBook.remove(currentPage);
@@ -409,7 +403,6 @@ public class Main {
             updatePageButtons();
         }
     }
-
     private static void prevPage() {
         if (currentPage != 0) {
             currentPage--;
@@ -423,7 +416,6 @@ public class Main {
             updatePageButtons();
         }
     }
-
     private static void nextPage() {
         int lastPage = musicBook.size() - 1;
         if (currentPage < lastPage) {

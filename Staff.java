@@ -12,30 +12,25 @@ public class Staff extends JComponent {
 
     private static Note draggedNote;
     private static boolean draggedNoteExists = false;
+
+    private static Accidental draggedAccidental;
+    private static boolean draggedAccidentalExists = false;
+
     private static Note selectedNote;
-    private static int selectedNoteIndex;
     private static boolean selectedNoteExists = false;
+
+    private static Accidental selectedAccidental;
+    private static boolean selectedAccidentalExists = false;
 
     private static final int WIDTH = 1000;
 
     private static Image trebleClefImage;
     private static Image commonTimeImage;
 
-    private static Image sixteenthNoteImage;
-    private static Image eightNoteImage;
-    private static Image quarterNoteImage;
-    private static Image halfNoteImage;
-    private static Image wholeNoteImage;
 
     private static Image flatImage;
     private static Image sharpImage;
-    private static Image naturalImage;
 
-    private static Image sixteenthRestImage;
-    private static Image eightRestImage;
-    private static Image quarterRestImage;
-    private static Image halfRestImage;
-    private static Image wholeRestImage;
 
     static {
         try {
@@ -44,19 +39,8 @@ public class Staff extends JComponent {
 
             flatImage = ImageIO.read(Staff.class.getResource("/images/flat.png"));
             sharpImage = ImageIO.read(Staff.class.getResource("/images/sharp.png"));
-            naturalImage = ImageIO.read(Staff.class.getResource("/images/natural.png"));
 
-            sixteenthNoteImage = ImageIO.read(MusicView.class.getResource("/images/sixteenthNote.png"));
-            eightNoteImage = ImageIO.read(MusicView.class.getResource("/images/eighthNote.png"));
-            quarterNoteImage = ImageIO.read(MusicView.class.getResource("/images/quarterNote.png"));
-            halfNoteImage = ImageIO.read(MusicView.class.getResource("/images/halfNote.png"));
-            wholeNoteImage = ImageIO.read(MusicView.class.getResource("/images/wholeNote.png"));
 
-            sixteenthRestImage = ImageIO.read(Staff.class.getResource("/images/sixteenthRest.png"));
-            eightRestImage = ImageIO.read(Staff.class.getResource("/images/eighthRest.png"));
-            quarterRestImage = ImageIO.read(Staff.class.getResource("/images/quarterRest.png"));
-            halfRestImage = ImageIO.read(Staff.class.getResource("/images/halfRest.png"));
-            wholeRestImage = ImageIO.read(Staff.class.getResource("/images/wholeRest.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -79,27 +63,31 @@ public class Staff extends JComponent {
         // Draw notes
         for (int i = 0; i < notesList.size(); i++) {
             Note note = notesList.get(i);
-
-            // When selection is on...
-//            System.out.println("SelectedNoteExists = " + selectedNoteExists);
-//            System.out.println("SelectedNoteIndex = " + selectedNoteIndex);
-//            System.out.println("-------");
-            Image noteType;
-            noteType = getNoteType(note);
-            g.drawImage(noteType, note.getXPositionPoint(), note.getYPositionPoint(), null);
+            note.paint(g);
         }
 
-        // Dragged note
+        // Draw any notes being dragged, if applicable
         if (draggedNoteExists) {
-            Image draggedNoteType = getNoteType(draggedNote);
-            g.drawImage(draggedNoteType, draggedNote.getXPositionPoint(), draggedNote.getYPositionPoint(), null);
+            draggedNote.paint(g);
         }
+
+        // Draw any accidentals being dragged, if applicable
+        if (draggedAccidentalExists) {
+            draggedAccidental.paint(g);
+            for (int i = 0; i < notesList.size(); i++) {
+                Note currNote = notesList.get(i);
+                currNote.drawOutline(g);
+            }
+        }
+        // Draw any selected notes with an outline, if applicable
         if (selectedNoteExists) {
-            Image selectedNoteType = getNoteType(selectedNote);
-            g.drawImage(selectedNoteType, selectedNote.getXPositionPoint(), selectedNote.getYPositionPoint(), null);
-            g.setColor(Color.blue);
-            g.drawRect(selectedNote.getXPositionPoint(), selectedNote.getYPositionPoint(), selectedNote.getWidth(), selectedNote.getHeight());
+            selectedNote.paint(g);
+            selectedNote.drawOutline(g);
         }
+        if (selectedAccidentalExists) {
+            selectedAccidental.drawOutline(g);
+        }
+
 
         g.setColor(Color.black);
         // Horizontal lines
@@ -119,178 +107,6 @@ public class Staff extends JComponent {
         g.drawLine(x + WIDTH/3, y, x + WIDTH/3, 60 + y);
         g.drawLine(x + (2 * WIDTH/3), y, x + (2 * WIDTH/3), 60 + y);
     }
-
-    private Image getNoteType(Note note) {
-        /* Note type:
-         * 0 - note
-         * 1 - rest
-         * 2 - flat
-         * 3 - sharp
-         */
-
-        /* Note duration:
-         * 0 - whole
-         * 1 - half
-         * 2 - quarter
-         * 3 - eighth
-         * 4 - sixteenth
-         * */
-        int type = note.getType();
-        int duration = note.getDuration();
-
-        if (type == 0) {
-            switch (duration) {
-                case 0:
-                    return wholeNoteImage;
-                case 1:
-                    return halfNoteImage;
-                case 2:
-                    return quarterNoteImage;
-                case 3:
-                    return eightNoteImage;
-                case 4:
-                    return sixteenthNoteImage;
-            }
-        }
-        else if (type == 1) {
-            switch (duration) {
-                case 0:
-                    return wholeRestImage;
-                case 1:
-                    return halfRestImage;
-                case 2:
-                    return quarterRestImage;
-                case 3:
-                    return eightRestImage;
-                case 4:
-                    return sixteenthRestImage;
-            }
-        }
-        else if (type == 2) {
-            return flatImage;
-        }
-        else if (type == 3) {
-            return sharpImage;
-        } else {
-            System.out.println("Didn't work lol");
-        }
-        return null;
-    }
-
-    public static int getNoteHeight(Note note) {
-        /* Note type:
-         * 0 - note
-         * 1 - rest
-         * 2 - flat
-         * 3 - sharp
-         */
-
-        /* Note duration:
-         * 0 - whole
-         * 1 - half
-         * 2 - quarter
-         * 3 - eighth
-         * 4 - sixteenth
-         * */
-        int type = note.getType();
-        int duration = note.getDuration();
-
-        if (type == 0) {
-            switch (duration) {
-                case 0:
-                    return wholeNoteImage.getHeight(null);
-                case 1:
-                    return halfNoteImage.getHeight(null);
-                case 2:
-                    return quarterNoteImage.getHeight(null);
-                case 3:
-                    return eightNoteImage.getHeight(null);
-                case 4:
-                    return sixteenthNoteImage.getHeight(null);
-            }
-        }
-        else if (type == 1) {
-            switch (duration) {
-                case 0:
-                    return wholeRestImage.getHeight(null);
-                case 1:
-                    return halfRestImage.getHeight(null);
-                case 2:
-                    return quarterRestImage.getHeight(null);
-                case 3:
-                    return eightRestImage.getHeight(null);
-                case 4:
-                    return sixteenthRestImage.getHeight(null);
-            }
-        }
-        else if (type == 2) {
-            return flatImage.getHeight(null);
-        }
-        else if (type == 3) {
-            return sharpImage.getHeight(null);
-        } else {
-            System.out.println("Didn't work lol");
-        }
-        return -1;
-    }
-
-    public static int getNoteWidth(Note note) {
-        /* Note type:
-         * 0 - note
-         * 1 - rest
-         * 2 - flat
-         * 3 - sharp
-         */
-
-        /* Note duration:
-         * 0 - whole
-         * 1 - half
-         * 2 - quarter
-         * 3 - eighth
-         * 4 - sixteenth
-         * */
-        int type = note.getType();
-        int duration = note.getDuration();
-
-        if (type == 0) {
-            switch (duration) {
-                case 0:
-                    return wholeNoteImage.getWidth(null);
-                case 1:
-                    return halfNoteImage.getWidth(null);
-                case 2:
-                    return quarterNoteImage.getWidth(null);
-                case 3:
-                    return eightNoteImage.getWidth(null);
-                case 4:
-                    return sixteenthNoteImage.getWidth(null);
-            }
-        }
-        else if (type == 1) {
-            switch (duration) {
-                case 0:
-                    return wholeRestImage.getWidth(null);
-                case 1:
-                    return halfRestImage.getWidth(null);
-                case 2:
-                    return quarterRestImage.getWidth(null);
-                case 3:
-                    return eightRestImage.getWidth(null);
-                case 4:
-                    return sixteenthRestImage.getWidth(null);
-            }
-        }
-        else if (type == 2) {
-            return flatImage.getWidth(null);
-        }
-        else if (type == 3) {
-            return sharpImage.getWidth(null);
-        } else {
-            System.out.println("Didn't work lol");
-        }
-        return -1;
-    }
-
 
     // Getters
     public int getX() { return this.x; }
@@ -314,6 +130,8 @@ public class Staff extends JComponent {
     public void removeNote(int index) {
         notesList.remove(index);
     }
+
+    // Dragged stuff
     public void setDraggedNote(Note note) {
         draggedNote = note;
         draggedNoteExists = true;
@@ -321,14 +139,48 @@ public class Staff extends JComponent {
     public void setDraggedNoteExists(boolean bool) {
         draggedNoteExists = bool;
     }
+
+    public void setDraggedAccidental(Accidental accidental) {
+        draggedAccidental = accidental;
+        draggedAccidentalExists = true;
+    }
+    public void addAccidentalIfValid(Accidental accidental) {
+        int x = accidental.getX();
+        int y = accidental.getY();
+
+        for (int i = 0; i < notesList.size(); i++) {
+            Note currNote = notesList.get(i);
+            // Check if x and y are in bounds
+            boolean inXBounds = (x >= currNote.getXPositionPoint() && x <= currNote.getXEnd());
+            boolean inYBounds = (y >= currNote.getYPositionPoint() && y <= currNote.getYEnd());
+            if (inXBounds && inYBounds) {
+                String originalPitch = currNote.getPitch();
+                currNote.setAccidental(accidental);
+                Main.statusLabel.setText(originalPitch + " changed to " + currNote.getPitch());
+                System.out.println(currNote.hasAccidental());
+                break;
+            }
+        }
+    }
+    public void setDraggedAccidentalExists(boolean bool) {
+        draggedAccidentalExists = bool;
+    }
+
+    // Selected stuff
     public void setSelectedNote(Note note) {
         selectedNote = note;
         selectedNoteExists = true;
     }
-    public void setSelectedNoteIndex(int i) {
-        selectedNoteIndex = i;
-    }
     public void setSelectedNoteExists(boolean bool) {
         selectedNoteExists = bool;
+    }
+
+    public void setSelectedAccidental(Accidental accidental, Note note) {
+        selectedAccidental = accidental;
+        Note associatedNote = note;
+        selectedAccidentalExists = true;
+    }
+    public void setSelectedAccidentalExists(boolean bool) {
+        selectedAccidentalExists = bool;
     }
 }
