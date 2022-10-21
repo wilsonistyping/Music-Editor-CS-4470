@@ -11,6 +11,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     public static Note selectedSymbol = null;
     public static Accidental selectedAccidental = null;
+    public static Note selectedAccidentalNote = null;
     public static int lastAssociatedStaffIndex;
 
     private ArrayList<Staff> staffArrayList = new ArrayList<>();
@@ -63,9 +64,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     }
 
     // Event listeners
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
+
 
     @Override
     public void mousePressed(MouseEvent e) {
@@ -96,6 +95,21 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
                 }
             }
 
+            if (selectedAccidental != null) {
+                int x = selectedAccidental.getX();
+                int y = selectedAccidental.getY();
+                boolean inAccXBounds = (mouseX >= selectedAccidental.getX() && mouseX <= (selectedAccidental.getX() + selectedAccidental.getWidth()));
+                boolean inAccYBounds = (mouseY >= selectedAccidental.getY() && mouseY <= (selectedAccidental.getY() + selectedAccidental.getHeight()));
+                if (!(inAccXBounds && inAccYBounds)) {
+                    selectedAccidental.setSelected(false);
+                    staffArrayList.get(lastAssociatedStaffIndex).setSelectedAccidentalExists(false);
+                    selectedAccidental = null;
+                    associatedStaff.setSelectedAccidental(null, null);
+                    associatedStaff.setSelectedAccidentalExists(false);
+                    lastAssociatedStaffIndex = -1;
+                }
+            }
+
             // Case 2 - note is selected, user clicks inside border
             if (selectedSymbol != null) {
                 // nothing happens lol
@@ -104,43 +118,55 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
             else {
                 for (int i = 0; i < associatedStaff.getNotes().size(); i++) {
                     Note note = associatedStaff.getNotes().get(i);
-                    int x = note.getXPositionPoint();
-                    int y = note.getYPositionPoint();
-                    boolean inXBounds = (mouseX >= x && mouseX <= x + note.getWidth());
-                    boolean inYBounds = (mouseY >= y && mouseY <= y + note.getHeight());
 
-//                    // Mouse is within the accidental bounds
-//                    if (note.hasAccidental()) {
-//                        Accidental acc = note.getAccidental();
-//                        boolean inXAccBounds = (mouseX >= acc.getX() && mouseX <= acc.getX() + acc.getWidth());
-//                        boolean inYAccBounds = (mouseY >= acc.getY() && mouseY <= acc.getY() + acc.getHeight());
-//
-//                        if (inXAccBounds && inYAccBounds) {
-//                            selectedAccidental = acc;
-//                            associatedStaff.setSelectedAccidental(acc, note);
-//                            associatedStaff.setSelectedAccidentalExists(true);
-//                            lastAssociatedStaffIndex = associatedStaffIndex;
-//                        }
-//                    }
-
-                    // Mouse is within the note bounds
-                    if (inXBounds && inYBounds) {
-                        note.setSelected(true);
-                        selectedSymbol = note;
-
-                        // Turn the selected symbol into the SelectedNote type in the Staff
-                        associatedStaff.setSelectedNote(note);
-                        associatedStaff.setSelectedNoteExists(true);
-                        lastAssociatedStaffIndex = associatedStaffIndex;
-
-                        // Remove the symbol from its notesList in the associated staff
-                        associatedStaff.getNotes().remove(i);
-
-                        break;
-                    } else {
-                        selectedSymbol = null;
-                        associatedStaff.setSelectedNoteExists(false);
+                    // If mouse is within the note's accidental's bounds, then set the selectedAccidental variable to that and don't select its note.
+                    Accidental acc = note.getAccidental();
+                    if (acc != null) {
+                        boolean inAccXBounds = (mouseX >= acc.getX() && mouseX <= (acc.getX() + acc.getWidth()));
+                        boolean inAccYBounds = (mouseY >= acc.getY() && mouseY <= (acc.getY() + acc.getHeight()));
+                        System.out.println("X bounds for the accidental are " + acc.getX() + " to " + (acc.getX() + acc.getWidth()));
+                        System.out.println("Y bounds for the accidental are " + acc.getY() + " to " + (acc.getY() + acc.getHeight()));
+                        System.out.println("Your (x, y) is " + mouseX + ", " + mouseY);
+                        System.out.println(inAccXBounds);
+                        System.out.println(inAccYBounds);
+                        if (inAccXBounds && inAccYBounds) {
+                            System.out.println("In x and y bounds");
+                            selectedAccidental = acc;
+                            selectedAccidentalNote = note;
+                            associatedStaff.setSelectedAccidental(acc, note);
+                            associatedStaff.setSelectedAccidentalExists(true);
+                            lastAssociatedStaffIndex = associatedStaffIndex;
+                        }
                     }
+
+                    // Mouse is not in the note's accidental's bounds. Check if it's in the note's bounds.
+                    if (selectedAccidental == null) {
+                        int x = note.getXPositionPoint();
+                        int y = note.getYPositionPoint();
+                        boolean inXBounds = (mouseX >= x && mouseX <= x + note.getWidth());
+                        boolean inYBounds = (mouseY >= y && mouseY <= y + note.getHeight());
+
+                        // Mouse is within the note bounds
+                        if (inXBounds && inYBounds) {
+                            note.setSelected(true);
+                            selectedSymbol = note;
+
+                            // Turn the selected symbol into the SelectedNote type in the Staff
+                            associatedStaff.setSelectedNote(note);
+                            associatedStaff.setSelectedNoteExists(true);
+                            lastAssociatedStaffIndex = associatedStaffIndex;
+
+                            // Remove the symbol from its notesList in the associated staff
+                            associatedStaff.getNotes().remove(i);
+
+                            break;
+                        } else {
+                            selectedSymbol = null;
+                            associatedStaff.setSelectedNoteExists(false);
+                        }
+                    }
+
+
                 }
             }
 
@@ -254,6 +280,28 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     }
 
     @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+            if (selectedSymbol != null) {
+                selectedSymbol = null;
+                staffArrayList.get(lastAssociatedStaffIndex).setSelectedNoteExists(false);
+                repaint();
+            }
+            if (selectedAccidental != null) {
+                selectedAccidental = null;
+                selectedAccidentalNote.removeAccidental();
+                staffArrayList.get(lastAssociatedStaffIndex).setSelectedAccidentalExists(false);
+                repaint();
+            }
+        }
+    }
+
+    // Unused listeners
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
     public void mouseEntered(MouseEvent e) {
 //        System.out.println("Mouse entered MusicView");
     }
@@ -270,27 +318,6 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-//            System.out.println("KeyEvent.VK_DELETE in keyPressed");
-            System.out.println("Selected symbol is " + selectedSymbol);
-            System.out.println("Selected accidental is " + selectedAccidental);
-            System.out.println("Last associated staff is " + lastAssociatedStaffIndex);
-            if (selectedSymbol != null) {
-                selectedSymbol = null;
-                staffArrayList.get(lastAssociatedStaffIndex).setSelectedNoteExists(false);
-                repaint();
-            }
-            if (selectedAccidental != null) {
-                selectedAccidental = null;
-                staffArrayList.get(lastAssociatedStaffIndex).setSelectedAccidentalExists(false);
-                staffArrayList.get(lastAssociatedStaffIndex).setSelectedAccidentalExists(false);
-                repaint();
-            }
-        }
     }
 
     @Override
