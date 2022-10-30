@@ -85,6 +85,7 @@ public class Note extends JComponent {
 
     public void paint(Graphics g) {
         Image noteImage;
+        snapY();
         noteImage = getNoteType(this);
         g.drawImage(noteImage, this.getXPositionPoint(), this.getYPositionPoint(), null);
 
@@ -99,9 +100,11 @@ public class Note extends JComponent {
         }
 
         if (aboveStaff()) {
+//            System.out.println("Above staff!");
             drawLedgerAboveIfNeeded(g);
         }
         else if (belowStaff()) {
+//            System.out.println("Below staff");
             drawLedgerBelowIfNeeded(g);
         }
     }
@@ -109,25 +112,69 @@ public class Note extends JComponent {
     private void drawLedgerBelowIfNeeded(Graphics g) {
         int rel_y = y % 120;
         if (rel_y >= 100) {
-            g.drawLine(xPositionPoint - 3, 105 + (associatedStaff * 120), getXEnd() + 3, 105 + (associatedStaff * 120));
+            if (duration == MusicConstants.WHOLE_NOTE || duration == MusicConstants.QUARTER_NOTE) {
+                g.drawLine(xPositionPoint - 3, 105 + (associatedStaff * 120), getXEnd() + 3, 105 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.HALF_NOTE) {
+                g.drawLine(xPositionPoint + 3, 105 + (associatedStaff * 120), getXEnd() - 3, 105 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.EIGHTH_NOTE) {
+                g.drawLine(xPositionPoint + 3, 105 + (associatedStaff * 120), getXEnd() - 12, 105 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.SIXTEENTH_NOTE) {
+                g.drawLine(xPositionPoint - 5, 105 + (associatedStaff * 120), getXEnd() - 5, 105 + (associatedStaff * 120));
+            }
         }
-        if (rel_y >= 115) {
-            g.drawLine(xPositionPoint - 3, 120 + (associatedStaff * 120), getXEnd() + 3, 120 + (associatedStaff * 120));
+        if (rel_y >= 117) {
+            if (duration == MusicConstants.WHOLE_NOTE || duration == MusicConstants.QUARTER_NOTE) {
+                g.drawLine(xPositionPoint - 3, 120 + (associatedStaff * 120), getXEnd() + 3, 120 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.HALF_NOTE) {
+                g.drawLine(xPositionPoint + 3, 120 + (associatedStaff * 120), getXEnd() - 3, 120 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.EIGHTH_NOTE) {
+                g.drawLine(xPositionPoint + 3, 120 + (associatedStaff * 120), getXEnd() - 12, 120 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.SIXTEENTH_NOTE) {
+                g.drawLine(xPositionPoint - 5, 120 + (associatedStaff * 120), getXEnd() - 5, 120 + (associatedStaff * 120));
+            }
         }
     }
 
     private boolean belowStaff() {
         int rel_y = y % 120;
-        return (rel_y >= 90 && rel_y <= 120);
+        return (rel_y >= 90 && rel_y < 120);
     }
 
     private void drawLedgerAboveIfNeeded(Graphics g) {
         int rel_y = y % 120;
         if (rel_y <= 20) {
-            g.drawLine(xPositionPoint - 3, 15 + (associatedStaff * 120), getXEnd() + 3, 15 + (associatedStaff * 120));
+            if (duration == MusicConstants.WHOLE_NOTE || duration == MusicConstants.QUARTER_NOTE) {
+                g.drawLine(xPositionPoint - 3, 15 + (associatedStaff * 120), getXEnd() + 3, 15 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.HALF_NOTE) {
+                g.drawLine(xPositionPoint + 3, 15 + (associatedStaff * 120), getXEnd() - 3, 15 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.EIGHTH_NOTE) {
+                g.drawLine(xPositionPoint + 3, 15 + (associatedStaff * 120), getXEnd() - 12, 15 + (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.SIXTEENTH_NOTE) {
+                g.drawLine(xPositionPoint - 5, 15 + (associatedStaff * 120), getXEnd() - 5, 15 + (associatedStaff * 120));
+            }
         }
-        if (rel_y <= 5) {
-            g.drawLine(xPositionPoint - 3, (associatedStaff * 120), getXEnd() + 3, (associatedStaff * 120));
+        if (rel_y <= 3) {
+            if (duration == MusicConstants.WHOLE_NOTE || duration == MusicConstants.QUARTER_NOTE) {
+                g.drawLine(xPositionPoint - 3,  (associatedStaff * 120), getXEnd() + 3, (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.HALF_NOTE) {
+                g.drawLine(xPositionPoint + 3, (associatedStaff * 120), getXEnd() - 3, (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.EIGHTH_NOTE) {
+                g.drawLine(xPositionPoint + 3, (associatedStaff * 120), getXEnd() - 12, (associatedStaff * 120));
+            }
+            else if (duration == MusicConstants.SIXTEENTH_NOTE) {
+                g.drawLine(xPositionPoint - 5, (associatedStaff * 120), getXEnd() - 5, (associatedStaff * 120));
+            }
         }
     }
 
@@ -142,15 +189,15 @@ public class Note extends JComponent {
         *
         *                                          A6
         *                                          G5
-        *           25 --------------------------- F5
+        *           30 --------------------------- F5
         *                                          E5
-        *           40 --------------------------- D5
+        *           45 --------------------------- D5
         *                                          C5
-        *           55 --------------------------- B5
+        *           60 --------------------------- B5
         *                                          A5
-        *           70 --------------------------- G4
+        *           75 --------------------------- G4
         *                                          F4
-        *           85 --------------------------- E4
+        *           90 --------------------------- E4
         *                                          D4
         *                                          C4
         *
@@ -158,69 +205,161 @@ public class Note extends JComponent {
         *
         *
          */
-        int relativeY = getYPositionPoint() % 120 + 5;
+//        int relativeY = getYPositionPoint() % 120 + 5;
+//        int relativeY = getYPositionPoint() % 120 + 5;
+        int relativeY = y % 120;
+
 
         // Notes with stems are janky with Y positioning
-        if (duration != 0) {
-            relativeY += 30;
-        }
+//        if (duration != 0) {
+//            relativeY += 30;
+//        }
 
-        int margin = 4;
-        String pitch = "";
+        int margin = 3;
+//        String pitch = "";
         String accSuffix = "";
         if (this.hasAccidental()) {
             if (this.getAccidental().getType() == MusicConstants.SYMBOL_SHARP) {
-                accSuffix = "Sharp";
+                accSuffix = " Sharp";
             } else {
-                accSuffix = "Flat";
+                accSuffix = " Flat";
             }
+        }
+//
 
+        // Where is it on the staff tho
+        if (relativeY >= 120 - margin && relativeY <= 120) {
+            return "A4" + accSuffix;
         }
+        if (relativeY < 120 - margin && relativeY > 105 + margin) {
+            return "B4" + accSuffix;
+        }
+        if (relativeY >= 105 - margin && relativeY <= 105 + margin) {
+            return "C4" + accSuffix;
+        }
+        if (relativeY < 105 - margin && relativeY > 90 + margin) {
+            return "D4" + accSuffix;
+        }
+        if (relativeY >= 90 - margin && relativeY <= 90 + margin) {
+            return "E4" + accSuffix;
+        }
+        if (relativeY < 90 - margin && relativeY > 75 + margin) {
+            return "F4" + accSuffix;
+        }
+        if (relativeY >= 75 - margin && relativeY <= 75 + margin) {
+            return "G4" + accSuffix;
+        }
+        if (relativeY < 75 - margin && relativeY > 60 + margin) {
+            return "A5" + accSuffix;
+        }
+        if (relativeY >= 60 - margin && relativeY <= 60 + margin) {
+            return "B5" + accSuffix;
+        }
+        if (relativeY < 60 - margin && relativeY > 45 + margin) {
+            return "C5" + accSuffix;
+        }
+        if (relativeY >= 45 - margin && relativeY <= 45 + margin) {
+            return "D5" + accSuffix;
+        }
+        if (relativeY < 45 - margin && relativeY > 30 + margin) {
+            return "E5" + accSuffix;
+        }
+        if (relativeY >= 30 - margin && relativeY <= 30 + margin) {
+            return "F5" + accSuffix;
+        }
+        if (relativeY < 30 - margin && relativeY > 15 + margin) {
+            return "G5" + accSuffix;
+        }
+        if (relativeY >= 15 - margin && relativeY <= 15 + margin) {
+            return "A6" + accSuffix;
+        }
+        if (relativeY < 15 - margin && relativeY > 0 + margin) {
+            return "B6" + accSuffix;
+        }
+        if (relativeY >= 0 && relativeY <= 0 + margin) {
+            return "C6" + accSuffix;
+        }
+        return null;
+    }
 
-        // Figure out which octave we're in
-//        System.out.println("Relative y before octave adjustment is " + relativeY);
-        if (relativeY > 71) {
-            pitch = "4";
-        }
-        else if (relativeY <= 71 && relativeY > 19) {
-            pitch = "5";
-        }
-        else if (relativeY <= 20) {
-            pitch = "6";
-        }
+    private void snapY() {
+        /*
+         *          - 0 -                           C6
+         *
+         *                                          A6
+         *                                          G5
+         *           30 --------------------------- F5
+         *                                          E5
+         *           45 --------------------------- D5
+         *                                          C5
+         *           60 --------------------------- B5
+         *                                          A5
+         *           75 --------------------------- G4
+         *                                          F4
+         *           90 --------------------------- E4
+         *                                          D4
+         *                                          C4
+         *
+         *         -  -                             A4
+         *
+         *
+         */
+//        int relativeY = getYPositionPoint() % 120 + 5;
+        int relativeY = y % 120;
+        int margin = 3;
 
-        // Figure out the letter
-        if (relativeY <= 25 - margin) {
-            relativeY += 50;
+        // Where is it on the staff tho
+        if (relativeY >= 120 - margin && relativeY <= 120) {
+            setY(119 + 120 * associatedStaff);
         }
-        if (relativeY <= 75 - margin) {
-            relativeY += 50;
+        else if (relativeY < 120 - margin && relativeY > 105 + margin) {
+            setY(112 + 120 * associatedStaff);
         }
-
-//        System.out.println("Relative y is " + relativeY);
-
-        if (relativeY < 120 + margin && relativeY > 120 - margin) {
-            return "A" + pitch + accSuffix;
+        else if (relativeY >= 105 - margin && relativeY <= 105 + margin) {
+            setY(105 + 120 * associatedStaff);
         }
-        else if (relativeY <= 112 + margin && relativeY > 112 - margin) {
-            return "B" + pitch + accSuffix;
+        else if (relativeY < 105 - margin && relativeY > 90 + margin) {
+            setY(97 + 120 * associatedStaff);
         }
-        else if (relativeY < 105 + margin && relativeY > 105 - margin) {
-            return "C" + pitch + accSuffix;
+        else if (relativeY >= 90 - margin && relativeY <= 90 + margin) {
+            setY(90 + 120 * associatedStaff);
         }
-        else if (relativeY <= 97 + margin && relativeY > 97 - margin) {
-            return "D" + pitch + accSuffix;
+        else if (relativeY < 90 - margin && relativeY > 75 + margin) {
+            setY(82 + 120 * associatedStaff);
         }
-        else if (relativeY < 90 + margin && relativeY > 90 - margin) {
-            return "E" + pitch + accSuffix;
+        else if (relativeY >= 75 - margin && relativeY <= 75 + margin) {
+            setY(75 + 120 * associatedStaff);
         }
-        else if (relativeY <= 82 + margin && relativeY > 82 - margin) {
-            return "F" + pitch + accSuffix;
+        else if (relativeY < 75 - margin && relativeY > 60 + margin) {
+            setY(67 + 120 * associatedStaff);
         }
-        else if (relativeY < 75 + margin && relativeY > 75 - margin) {
-            return "G" + pitch + accSuffix;
+        else if (relativeY >= 60 - margin && relativeY <= 60 + margin) {
+            setY(60 + 120 * associatedStaff);
         }
-    return null;
+        else if (relativeY < 60 - margin && relativeY > 45 + margin) {
+            setY(52 + 120 * associatedStaff);
+        }
+        else if (relativeY >= 45 - margin && relativeY <= 45 + margin) {
+            setY(45 + 120 * associatedStaff);
+        }
+        else if (relativeY < 45 - margin && relativeY > 30 + margin) {
+            setY(37 + 120 * associatedStaff);
+        }
+        else if (relativeY >= 30 - margin && relativeY <= 30 + margin) {
+            setY(30 + 120 * associatedStaff);
+        }
+        else if (relativeY < 30 - margin && relativeY > 15 + margin) {
+            setY(22 + 120 * associatedStaff);
+        }
+        else if (relativeY >= 15 - margin && relativeY <= 15 + margin) {
+            setY(15 + 120 * associatedStaff);
+        }
+        else if (relativeY < 15 - margin && relativeY > 0 + margin) {
+            setY(7 + 120 * associatedStaff);
+        }
+        else if (relativeY > 0 && relativeY <= 0 + margin) {
+            setY(0 + 120 * associatedStaff);
+        }
     }
 
     public void drawOutline(Graphics g) {
@@ -388,8 +527,9 @@ public class Note extends JComponent {
     }
 
     public String getPitch() {
-        this.calculatePitch();
-        return this.pitch; }
+        pitch = this.calculatePitch();
+        return this.pitch;
+    }
     public Accidental getAccidental() { return this.accidental; }
     public int getAssociatedStaff() { return this.associatedStaff; }
     public int getDuration() {

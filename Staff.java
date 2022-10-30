@@ -103,6 +103,7 @@ public class Staff extends JComponent {
         } else {
             g.drawLine(x + WIDTH, y, x + WIDTH, 60 + y);
         }
+        // Draw measures
         g.drawLine(x, y, x, 60 + y);
         g.drawLine(x + WIDTH/3, y, x + WIDTH/3, 60 + y);
         g.drawLine(x + (2 * WIDTH/3), y, x + (2 * WIDTH/3), 60 + y);

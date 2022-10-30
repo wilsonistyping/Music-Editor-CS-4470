@@ -174,7 +174,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         }
         // Insert mode
         else {
-            // Flag for a dragged note if the symbol is note (0 or rest (1)
+            // Flag for a dragged note if the symbol is note (0) or rest (1)
             if (isNoteOrRest()) {
                 if (isNote()) { mouseX = xSnapAdjust(mouseX, associatedStaff); }
                 Note note = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
@@ -206,6 +206,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
                 selectedSymbol.setX(mouseX);
                 selectedSymbol.setY(mouseY);
                 lastAssociatedStaffIndex = associatedStaffIndex;
+                Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
                 associatedStaff.setSelectedNote(note);
             }
         }
@@ -216,6 +217,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
                     mouseX = xSnapAdjust(mouseX, associatedStaff);
                 }
                 Note movedNote = new Note(mouseX, mouseY, Main.currentDuration, Main.currentTool, associatedStaffIndex);
+                Main.statusLabel.setText("Pitch of this note is " + movedNote.getPitch());
                 associatedStaff.setDraggedNote(movedNote);
             }
             else if (isAccidental()) {
