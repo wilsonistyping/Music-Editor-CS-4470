@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 public class MusicView extends JComponent implements MouseListener, MouseMotionListener, KeyListener {
@@ -16,6 +17,10 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     private ArrayList<Staff> staffArrayList = new ArrayList<>();
     private int indexOfCurrentStaff;
+
+    // Stroke recognition variables
+    ArrayList<Point2D> stroke = new ArrayList<>();
+    DollarRecognizer recognizer = new DollarRecognizer();
 
     public MusicView() {
         setPreferredSize(new Dimension(preferredWidth, preferredHeight));
@@ -35,10 +40,34 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     protected void paintComponent(Graphics g) {
+        // Draw all staves
         for (int i = 0; i < staffArrayList.size(); i++) {
             Staff currStaff = staffArrayList.get(i);
             currStaff.paint(g);
         }
+
+        Graphics2D g2 = (Graphics2D) g;
+        g.setColor(Color.red);
+        g2.setStroke(new BasicStroke(2));
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        // Draw all line segments of the stroke
+        if (!stroke.isEmpty()) {
+            // Edge case of only one stroke:
+            if (stroke.size() == 1) {
+                int x1 = (int) stroke.get(0).getX();
+                int y1 = (int) stroke.get(0).getY();
+                g.drawLine(x1, y1, x1, y1);
+            } else {
+                for (int i = 0; i < stroke.size() - 1; i++) {
+                    int x1 = (int) stroke.get(i).getX();
+                    int x2 = (int) stroke.get(i + 1).getX();
+                    int y1 = (int) stroke.get(i).getY();
+                    int y2 = (int) stroke.get(i + 1).getY();
+                    g.drawLine(x1, y1, x2, y2);
+                }
+            }
+        }
+        g.setColor(Color.black);
     }
 
     public void newStaff() {
@@ -74,8 +103,15 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         int associatedStaffIndex = mouseY / 120;
         Staff associatedStaff = staffArrayList.get(associatedStaffIndex);
 
+        // Pen mode
+        if (Main.penOn) {
+            stroke = new ArrayList<Point2D>();
+            stroke.add(new Point2D.Double(mouseX, mouseY));
+            repaint();
+        }
+
         // Drag mode
-        if (Main.selectOn) {
+        else if (Main.selectOn) {
 
             // Case 1 - note is selected, user clicks outside border
             if (selectedSymbol != null) {
@@ -197,8 +233,15 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         int associatedStaffIndex = mouseY / 120;
         Staff associatedStaff = staffArrayList.get(associatedStaffIndex);
 
-        // Drag mode (Select on)
-        if (Main.selectOn) {
+        // Pen mode
+        if (Main.penOn) {
+            stroke.add(new Point2D.Double(mouseX, mouseY));
+            System.out.println("Drawing!");
+            repaint();
+        }
+
+        // Drag mode
+        else if (Main.selectOn) {
             // If there is a symbol selected, then change its position according to the mouse position
             if (selectedSymbol != null) {
                 Note note = new Note(mouseX, mouseY, selectedSymbol.getDuration(), selectedSymbol.getType(), associatedStaffIndex);
@@ -236,14 +279,104 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         int associatedStaffIndex = mouseY / 120;
         Staff associatedStaff = staffArrayList.get(associatedStaffIndex);
 
-        // Drag mode (Select on)
-        if (Main.selectOn) {
+
+        // Pen mode
+        if (Main.penOn) {
+            System.out.println(stroke.toString());
+
+            Result result = recognizer.recognize(stroke);
+            System.out.println("\nGot result: " + result.getName());
+            System.out.println("\tScore=" + result.getScore());
+            System.out.println("\tBounding Box =" + result.getBoundingBox());
+            System.out.println(result.getName());
+
+            int x = (int)stroke.get(0).getX();
+            int y = (int)stroke.get(0).getY();
+
+            if (!(result.getName().equals("No match"))) {
+                switch (result.getName()) {
+                    case "circle":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.WHOLE_NOTE, MusicConstants.SYMBOL_NOTE, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a whole note at (" + x + ", " + y + ").");
+                        break;
+                    case "half note":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.HALF_NOTE, MusicConstants.SYMBOL_NOTE, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a half note at (" + x + ", " + y + ").");
+                        break;
+                    case "quarter note":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.QUARTER_NOTE, MusicConstants.SYMBOL_NOTE, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a quarter note at (" + x + ", " + y + ").");
+                        break;
+                    case "eighth note":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.EIGHTH_NOTE, MusicConstants.SYMBOL_NOTE, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a eighth note at (" + x + ", " + y + ").");
+                        break;
+                    case "sixteenth note":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.SIXTEENTH_NOTE, MusicConstants.SYMBOL_NOTE, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a sixteenth note at (" + x + ", " + y + ").");
+                        break;
+                    case "rectangle":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.WHOLE_NOTE, MusicConstants.SYMBOL_REST, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a whole rest at (" + x + ", " + y + ").");
+                        break;
+                    case "half rest":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.HALF_NOTE, MusicConstants.SYMBOL_REST, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a half rest at (" + x + ", " + y + ").");
+                        break;
+                    case "right curly brace":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.QUARTER_NOTE, MusicConstants.SYMBOL_REST, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a quarter rest at (" + x + ", " + y + ").");
+                        break;
+                    case "eighth rest":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.EIGHTH_NOTE, MusicConstants.SYMBOL_REST, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a eighth rest at (" + x + ", " + y + ").");
+                        break;
+                    case "sixteenth rest":
+                        associatedStaff.addNote(new Note(x, y,
+                                MusicConstants.SIXTEENTH_NOTE, MusicConstants.SYMBOL_REST, associatedStaffIndex));
+                        Main.statusLabel.setText("Added a sixteenth rest at (" + x + ", " + y + ").");
+                        break;
+                    case "flat":
+                        boolean flatIsValid = associatedStaff.addAccidentalIfValid(new Accidental(x, y, MusicConstants.SYMBOL_FLAT));
+                        if (flatIsValid) {
+                            Main.statusLabel.setText("Added a flat at (" + x + ", " + y + ").");
+                        } else {
+                            Main.statusLabel.setText("Tried to add a flat at (" + x + ", " + y + "), but there was no note.");
+                        }
+                        break;
+                    case "star":
+                        boolean sharpIsValid = associatedStaff.addAccidentalIfValid(new Accidental(x, y, MusicConstants.SYMBOL_SHARP));
+                        if (sharpIsValid) {
+                            Main.statusLabel.setText("Added a sharp at (" + x + ", " + y + ").");
+                        } else {
+                            Main.statusLabel.setText("Tried to add a sharp at (" + x + ", " + y + "), but there was no note.");
+                        }
+                        break;
+                }
+            } else {
+                Main.statusLabel.setText("No match for the candidate stroke :(");
+            }
+
+            stroke = new ArrayList<>();
+            repaint();
+        }
+        // Drag mode
+        else if (Main.selectOn) {
             if (selectedSymbol != null) {
                 Note note = new Note(mouseX, mouseY, selectedSymbol.getDuration(), selectedSymbol.getType(), associatedStaffIndex);
                 Main.statusLabel.setText("Pitch of this note is " + note.getPitch());
             }
         }
-        // Insert mode (Select off)
+        // Insert mode
         else {
             // Note or rest
             if (isNoteOrRest()) {

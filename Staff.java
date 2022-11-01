@@ -145,7 +145,7 @@ public class Staff extends JComponent {
         draggedAccidental = accidental;
         draggedAccidentalExists = true;
     }
-    public void addAccidentalIfValid(Accidental accidental) {
+    public boolean addAccidentalIfValid(Accidental accidental) {
         int x = accidental.getX();
         int y = accidental.getY();
 
@@ -159,9 +159,10 @@ public class Staff extends JComponent {
                 currNote.setAccidental(accidental);
                 Main.statusLabel.setText(originalPitch + " changed to " + currNote.getPitch());
                 System.out.println(currNote.hasAccidental());
-                break;
+                return true;
             }
         }
+        return false;
     }
     public void setDraggedAccidentalExists(boolean bool) {
         draggedAccidentalExists = bool;

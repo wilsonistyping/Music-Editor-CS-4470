@@ -68,7 +68,6 @@
  *
  * Port to Java and other modifications by Keith Edwards, 2019.
 **/
-package dollar;
 
 import java.util.ArrayList;
 import java.util.Vector;

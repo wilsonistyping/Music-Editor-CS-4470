@@ -9,7 +9,7 @@ public class Main {
     public static int currentDuration;
     private static int currentPage = 0;
     public static boolean selectOn = false;
-    private static boolean penOn = false;
+    public static boolean penOn = false;
 
     private static JButton newStaffButton, deleteStaffButton, deletePageButton, prevPageButton, nextPageButton;
     private static JMenuItem editMenu_deleteStaff, pageMenu_deletePage, pageMenu_nextPage, pageMenu_prevPage;
@@ -204,7 +204,10 @@ public class Main {
         });
     }
     private static void penButtonLogic(JButton penButton) {
-        penButton.addActionListener(e -> statusLabel.setText("penButton pressed! Doesn't do anything right now."));
+        penButton.addActionListener(e -> {
+            penOn = !penOn;
+            statusLabel.setText("Select mode is " + penOn);
+        });
     }
     // new/delete staff row
     private static void newStaffButtonLogic(JButton newStaffButton) {

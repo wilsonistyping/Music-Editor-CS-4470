@@ -69,8 +69,6 @@
  * Port to Java and other modifications by Keith Edwards, 2019.
 **/
 
-package dollar;
-
 import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
