@@ -304,12 +304,29 @@ public class Note extends JComponent {
          *
          *
          */
-//        int relativeY = getYPositionPoint() % 120 + 5;
         int relativeY = y % 120;
         int margin = 3;
 
+        if (this.type == MusicConstants.SYMBOL_REST) {
+            if (this.duration == MusicConstants.WHOLE_NOTE) {
+                setY(50 + 120 * associatedStaff);
+            }
+            else if (this.duration == MusicConstants.HALF_NOTE) {
+                setY(85 + 120 * associatedStaff);
+            }
+            else if (this.duration == MusicConstants.QUARTER_NOTE) {
+                setY(85 + 120 * associatedStaff);
+            }
+            else if (this.duration == MusicConstants.EIGHTH_NOTE) {
+                setY(85 + 120 * associatedStaff);
+            }
+            else if (this.duration == MusicConstants.SIXTEENTH_NOTE) {
+                setY(85 + 120 * associatedStaff);
+            }
+        }
+
         // Where is it on the staff tho
-        if (relativeY >= 120 - margin && relativeY <= 120) {
+        else if (relativeY >= 120 - margin && relativeY <= 120) {
             setY(119 + 120 * associatedStaff);
         }
         else if (relativeY < 120 - margin && relativeY > 105 + margin) {
@@ -631,7 +648,11 @@ public class Note extends JComponent {
         this.y = y;
     }
     public void setPitch(String pitch) { this.pitch = pitch; }
-    public void setAccidental(Accidental accidental) { this.accidental = accidental; }
+    public void setAccidental(Accidental accidental) {
+        if (this.type == MusicConstants.SYMBOL_NOTE) {
+            this.accidental = accidental;
+        }
+    }
     public void removeAccidental() {
         this.accidental = null;
     }

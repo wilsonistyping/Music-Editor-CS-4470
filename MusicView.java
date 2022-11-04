@@ -52,13 +52,20 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         // Draw all line segments of the stroke
         if (!stroke.isEmpty()) {
-            // Edge case of only one stroke:
+            // Edge case of only one point:
             if (stroke.size() == 1) {
                 int x1 = (int) stroke.get(0).getX();
                 int y1 = (int) stroke.get(0).getY();
                 g.drawLine(x1, y1, x1, y1);
-            } else {
+            }
+            // General case of multiple points
+            else {
                 for (int i = 0; i < stroke.size() - 1; i++) {
+                    // Stroke opacity .-  ..- .--- --..--->
+                    float opacity = 255 * ((float) i / (float) stroke.size());
+                    System.out.println(opacity);
+                    g.setColor(new Color(255, 0, 0, (int) opacity));
+
                     int x1 = (int) stroke.get(i).getX();
                     int x2 = (int) stroke.get(i + 1).getX();
                     int y1 = (int) stroke.get(i).getY();

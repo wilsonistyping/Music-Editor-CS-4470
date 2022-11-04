@@ -76,7 +76,9 @@ public class Staff extends JComponent {
             draggedAccidental.paint(g);
             for (int i = 0; i < notesList.size(); i++) {
                 Note currNote = notesList.get(i);
-                currNote.drawOutline(g);
+                if (currNote.getType() == MusicConstants.SYMBOL_NOTE) {
+                    currNote.drawOutline(g);
+                }
             }
         }
         // Draw any selected notes with an outline, if applicable

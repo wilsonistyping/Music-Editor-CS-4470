@@ -200,13 +200,13 @@ public class Main {
         // Select button logic, pen button logic
         selectButton.addActionListener(e -> {
             selectOn = !selectOn;
-            statusLabel.setText("selectButton is " + selectOn);
+            statusLabel.setText("Select mode is " + selectOn);
         });
     }
     private static void penButtonLogic(JButton penButton) {
         penButton.addActionListener(e -> {
             penOn = !penOn;
-            statusLabel.setText("Select mode is " + penOn);
+            statusLabel.setText("Pen mode is " + penOn);
         });
     }
     // new/delete staff row
