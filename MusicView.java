@@ -302,6 +302,19 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
             if (!(result.getName().equals("No match"))) {
                 switch (result.getName()) {
+                    case "zig-zag":
+                        ArrayList<Note> notesList = associatedStaff.getNotes();
+                        for (int i = 0; i < notesList.size(); i++) {
+                            boolean inXBounds = (x >= notesList.get(i).getXPositionPoint() && x <= notesList.get(i).getXEnd());
+                            boolean inYBounds = (y >= notesList.get(i).getYPositionPoint() && y <= notesList.get(i).getYEnd());
+                            if (inXBounds && inYBounds) {
+                                associatedStaff.removeNote(i);
+                                Main.statusLabel.setText("Removed note at (" + x + ", " + y + ").");
+                                break;
+                            }
+                        }
+                        Main.statusLabel.setText("Tried to remove a note but none existed at (" + x + ", " + y + ").");
+                        break;
                     case "circle":
                         associatedStaff.addNote(new Note(x, y,
                                 MusicConstants.WHOLE_NOTE, MusicConstants.SYMBOL_NOTE, associatedStaffIndex));
