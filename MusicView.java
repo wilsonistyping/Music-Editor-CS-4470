@@ -114,6 +114,7 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
         if (Main.penOn) {
             stroke = new ArrayList<Point2D>();
             stroke.add(new Point2D.Double(mouseX, mouseY));
+            indexOfCurrentStaff = associatedStaffIndex;
             repaint();
         }
 
@@ -289,13 +290,14 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
         // Pen mode
         if (Main.penOn) {
-            System.out.println(stroke.toString());
-
+//            System.out.println(stroke.toString());
+            associatedStaffIndex = indexOfCurrentStaff;
+            associatedStaff = staffArrayList.get(associatedStaffIndex);
             Result result = recognizer.recognize(stroke);
-            System.out.println("\nGot result: " + result.getName());
-            System.out.println("\tScore=" + result.getScore());
-            System.out.println("\tBounding Box =" + result.getBoundingBox());
-            System.out.println(result.getName());
+//            System.out.println("\nGot result: " + result.getName());
+//            System.out.println("\tScore=" + result.getScore());
+//            System.out.println("\tBounding Box =" + result.getBoundingBox());
+//            System.out.println(result.getName());
 
             int x = (int)stroke.get(0).getX();
             int y = (int)stroke.get(0).getY();
@@ -380,6 +382,9 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
                         } else {
                             Main.statusLabel.setText("Tried to add a sharp at (" + x + ", " + y + "), but there was no note.");
                         }
+                        break;
+                    default:
+                        Main.statusLabel.setText("No symbol was recognized :(");
                         break;
                 }
             } else {
