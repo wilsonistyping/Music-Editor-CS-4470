@@ -10,6 +10,7 @@ public class Main {
     private static int currentPage = 0;
     public static boolean selectOn = false;
     public static boolean penOn = false;
+    public static boolean playOn = false;
 
     private static JButton newStaffButton, deleteStaffButton, deletePageButton, prevPageButton, nextPageButton;
     private static JMenuItem editMenu_deleteStaff, pageMenu_deletePage, pageMenu_nextPage, pageMenu_prevPage;
@@ -114,8 +115,16 @@ public class Main {
         playStopButtonsPanel.add(playButton);
         playStopButtonsPanel.add(stopButton);
 
-        playButton.addActionListener(e -> statusLabel.setText("playButton pressed"));
-        stopButton.addActionListener(e -> statusLabel.setText("stopButton pressed"));
+
+
+        playButton.addActionListener(e -> {
+            playMusic();
+            statusLabel.setText("Playback started!");
+        });
+        stopButton.addActionListener(e -> {
+            stopMusic();
+            statusLabel.setText("Playback stopped!");
+        });
 
         controlPanel.add(playStopButtonsPanel);
         controlPanel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -193,8 +202,19 @@ public class Main {
         controlPanel.add(pageNavigationPanel);
     }
 
-    // All of the logic for the buttons in the control pane below
 
+
+    private static void playMusic() {
+        for (int i = 0; i < musicBook.size(); i++) {
+            MusicView page = musicBook.get(i);
+            page.playNotes();
+        }
+    }
+
+    private static void stopMusic() {
+    }
+
+    // All of the logic for the buttons in the control pane below
     // select/pen row
     private static void selectButtonLogic(JButton selectButton) {
         // Select button logic, pen button logic

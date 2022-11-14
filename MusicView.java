@@ -100,10 +100,12 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     }
 
     // Event listeners
-
-
     @Override
     public void mousePressed(MouseEvent e) {
+        if (Main.playOn) {
+            return;
+        }
+
         requestFocusInWindow();
         int mouseX = e.getX();
         int mouseY = e.getY();
@@ -236,6 +238,10 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        if (Main.playOn) {
+            return;
+        }
+
         int mouseX = e.getX();
         int mouseY = e.getY();
         int associatedStaffIndex = mouseY / 120;
@@ -281,6 +287,10 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        if (Main.playOn) {
+            return;
+        }
+
         int mouseX = e.getX();
         int mouseY = e.getY();
 
@@ -505,5 +515,12 @@ public class MusicView extends JComponent implements MouseListener, MouseMotionL
     public int getIndexOfLastStaff() {
         return staffArrayList.size() - 1;
     }
+
+    // Music playback
+    public void playNotes() {
+
+    }
+
+    public
 }
 
